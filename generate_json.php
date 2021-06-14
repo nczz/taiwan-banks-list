@@ -73,11 +73,21 @@ foreach ($banks as $code => $bank) {
 }
 file_put_contents('bank_with_branchs_stripped.json', json_encode($banks_stripped));
 
-$csv_branch = array_map('str_getcsv', file('金融機構總分支機構.csv'));
-for ($i = 1; $i < count($csv_branch); $i++) {
-    print_r($csv_branch);
+$csv_branch2 = array_map('str_getcsv', file('金融機構總分支機構.csv'));
+$banks       = array();
+for ($i = 1; $i < count($csv_branch2); $i++) {
+    $bank = $csv_branch2[$i];
+    if (empty($bank[1])) {
+        $banks[$bank[0]] = array('name' => $bank[2], 'branchs' => array(), 'address' => $bank[4]);
+    } else {
+        $banks[$bank[0]]['branchs'][] = array('name' => $bank[3], 'code' => $bank[1], 'address' => $bank[4]);
+    }
 }
+file_put_contents('bank_with_branchs_fisc_version.json', json_encode($banks));
 
+/**
+ ** Methods
+ **/
 function download_file($url = '', $filename = '') {
     if ($url == '' || $filename == '') {
         return false;
