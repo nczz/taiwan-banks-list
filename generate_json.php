@@ -1,11 +1,11 @@
 <?php
 // 下載 CSV 檔案
 // Ref: https://data.gov.tw/dataset/11262 中央存款保險股份有限公司->要保機構名單
-// download_file('https://www.cdic.gov.tw/upload/opendata/' . urlencode('要保機構名單') . '.csv', '要保機構名單.csv');
+download_file('https://www.cdic.gov.tw/upload/opendata/' . urlencode('要保機構名單') . '.csv', '要保機構名單.csv');
 // Ref: https://data.gov.tw/dataset/6041 金融監督管理委員會->金融機構基本資料查詢（來源有改，新來源如下，取得直接，不必經過轉址，格式也較原始）
-// download_file('https://www.banking.gov.tw/ch/ap/bankno_excel.jsp', '金融機構基本資料.csv');
+download_file('https://www.banking.gov.tw/ch/ap/bankno_excel.jsp', '金融機構基本資料.csv');
 // Ref: https://data.gov.tw/dataset/24323 中央銀行->「總分支機構位置」查詢一覽表
-// download_file('https://www.fisc.com.tw/TC/OPENDATA/R2_Location.csv', '金融機構總分支機構.csv');
+download_file('https://www.fisc.com.tw/TC/OPENDATA/R2_Location.csv', '金融機構總分支機構.csv');
 // 解析要保機構名單 CSV 檔案
 $csv = array_map('str_getcsv', file('要保機構名單.csv'));
 // 機構類別排序
