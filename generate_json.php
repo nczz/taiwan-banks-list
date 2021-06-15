@@ -1,11 +1,11 @@
 <?php
 // 下載 CSV 檔案
 // Ref: https://data.gov.tw/dataset/11262 中央存款保險股份有限公司->要保機構名單
-download_file('https://www.cdic.gov.tw/upload/opendata/' . urlencode('要保機構名單') . '.csv', '要保機構名單.csv');
+// download_file('https://www.cdic.gov.tw/upload/opendata/' . urlencode('要保機構名單') . '.csv', '要保機構名單.csv');
 // Ref: https://data.gov.tw/dataset/6041 金融監督管理委員會->金融機構基本資料查詢（來源有改，新來源如下，取得直接，不必經過轉址，格式也較原始）
-download_file('https://www.banking.gov.tw/ch/ap/bankno_excel.jsp', '金融機構基本資料.csv');
+// download_file('https://www.banking.gov.tw/ch/ap/bankno_excel.jsp', '金融機構基本資料.csv');
 // Ref: https://data.gov.tw/dataset/24323 中央銀行->「總分支機構位置」查詢一覽表
-download_file('https://www.fisc.com.tw/TC/OPENDATA/R2_Location.csv', '金融機構總分支機構.csv');
+// download_file('https://www.fisc.com.tw/TC/OPENDATA/R2_Location.csv', '金融機構總分支機構.csv');
 // 解析要保機構名單 CSV 檔案
 $csv = array_map('str_getcsv', file('要保機構名單.csv'));
 // 機構類別排序
@@ -18,21 +18,21 @@ for ($i = 1; $i < count($csv); $i++) {
 }
 file_put_contents('banks_sort_by_cats.json', json_encode($cats));
 // 機構名稱與代碼排序
-$bank_codes = array();
+$banks_sort_by_codes = array();
 foreach ($cats as $cat => $banks) {
     foreach ($banks as $index => $bank) {
-        $long_code    = $bank[0];
-        $bank_name    = $bank[1];
-        $bank_site    = $bank[2];
-        $bank_code    = substr($long_code, 0, 3);
-        $branch_code  = substr($long_code, 3, strlen($long_code) - 3);
-        $bank_codes[] = array('name' => $bank_name, 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'site' => $bank_site);
+        $long_code             = $bank[0];
+        $bank_name             = $bank[1];
+        $bank_site             = $bank[2];
+        $bank_code             = substr($long_code, 0, 3);
+        $branch_code           = substr($long_code, 3, strlen($long_code) - 3);
+        $banks_sort_by_codes[] = array('name' => $bank_name, 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'site' => $bank_site);
     }
 }
-usort($bank_codes, function ($item1, $item2) {
+usort($banks_sort_by_codes, function ($item1, $item2) {
     return $item1['bank_code'] <=> $item2['bank_code'];
 });
-file_put_contents('banks_sort_by_codes.json', json_encode($bank_codes));
+file_put_contents('banks_sort_by_codes.json', json_encode($banks_sort_by_codes));
 // 解析金融機構基本資料 CSV 檔案
 $csv_branch = file_get_contents('金融機構基本資料.csv');
 // 檔案有編碼問題，先轉檔
@@ -65,26 +65,77 @@ foreach ($csv_branch as $line => $item) {
 }
 file_put_contents('bank_with_branchs_all.json', json_encode($banks));
 // 過濾非常用轉帳金融機構
-$banks_stripped = array();
+$bank_with_branchs_stripped = array();
 foreach ($banks as $code => $bank) {
     if (strlen($code) == 3 && count($bank['branchs']) > 0) {
-        $banks_stripped[$code] = $bank;
+        $bank_with_branchs_stripped[$code] = $bank;
     }
 }
-file_put_contents('bank_with_branchs_stripped.json', json_encode($banks_stripped));
+file_put_contents('bank_with_branchs_stripped.json', json_encode($bank_with_branchs_stripped));
 
-$csv_branch2 = array_map('str_getcsv', file('金融機構總分支機構.csv'));
-$banks       = array();
+$csv_branch2                    = array_map('str_getcsv', file('金融機構總分支機構.csv'));
+$bank_with_branchs_fisc_version = array();
 for ($i = 1; $i < count($csv_branch2); $i++) {
     $bank = $csv_branch2[$i];
     if (empty($bank[1])) {
-        $banks[$bank[0]] = array('name' => $bank[2], 'branchs' => array(), 'address' => $bank[4]);
+        $bank_with_branchs_fisc_version[$bank[0]] = array('name' => $bank[2], 'branchs' => array(), 'address' => $bank[4]);
     } else {
-        $banks[$bank[0]]['branchs'][] = array('name' => $bank[3], 'code' => $bank[1], 'address' => $bank[4]);
+        $bank_with_branchs_fisc_version[$bank[0]]['branchs'][] = array('name' => $bank[3], 'code' => $bank[1], 'address' => $bank[4]);
     }
 }
-file_put_contents('bank_with_branchs_fisc_version.json', json_encode($banks));
+file_put_contents('bank_with_branchs_fisc_version.json', json_encode($bank_with_branchs_fisc_version));
 
+//以 bank_with_branchs_fisc_version.json 這份，來整合 bank_with_branchs_all.json 扁平化第一層銀行代碼與第二層分行資訊的版本，再重組一二層。
+$bank_with_branchs_fisc_version = $bank_with_branchs_fisc_version;
+$banks_flat_remix_version       = array();
+foreach ($bank_with_branchs_fisc_version as $code => $banks_info) {
+    foreach ($banks_info['branchs'] as $index => $child_bank) {
+        $pre_data                  = array('name' => '', 'bank_code' => '', 'branch_code' => '', 'address' => '', 'princeipal' => '', 'phone' => '', 'princeipal' => '', 'site' => '', 'modify_date' => '');
+        $pre_data['bank_code']     = $code;
+        $bank_first_name           = str_replace('（農金資訊所屬會員）', '', $banks_info['name']);
+        $pre_data['name']          = $bank_first_name == $child_bank['name'] ? $bank_first_name : $bank_first_name . "({$child_bank['name']})";
+        $pre_data['branch_code']   = $child_bank['code'];
+        $pre_data['address']       = $child_bank['address'];
+        $get_banks_info_from_other = isset($banks[$code]) ? $banks[$code] : array();
+        $pre_data['site']          = isset($banks[$code]) ? $banks[$code]['site'] : '';
+        foreach ($get_banks_info_from_other['branchs'] as $index2 => $bks) {
+            if ($pre_data['branch_code'] == $bks['branch']) {
+                $pre_data['princeipal']  = $bks['princeipal'];
+                $pre_data['modify_date'] = $bks['modify_date'];
+                $pre_data['phone']       = $bks['phone'];
+                $pre_data['address']     = $bks['address'];
+            }
+        }
+        $banks_flat_remix_version[] = $pre_data;
+    }
+}
+file_put_contents('banks_flat_remix_version.json', json_encode($banks_flat_remix_version));
+// 把扁平化版本拆分一二層
+$bank_with_branchs_remix_version = array();
+foreach ($banks_flat_remix_version as $key => $bank_detail) {
+    if (!isset($bank_with_branchs_remix_version[$bank_detail['bank_code']])) {
+        $bank_with_branchs_remix_version[$bank_detail['bank_code']] = array();
+    }
+    if (!isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['site'])) {
+        $bank_with_branchs_remix_version[$bank_detail['bank_code']]['site'] = $bank_detail['site'];
+    }
+    if (!isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['name'])) {
+        $bank_with_branchs_remix_version[$bank_detail['bank_code']]['name'] = $bank_detail['name'];
+    }
+    if (isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'])) {
+        $bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'] = array();
+    }
+    $bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'][] = array(
+        'name'        => $bank_detail['name'],
+        'bank_code'   => $bank_detail['bank_code'],
+        'branch_code' => $bank_detail['branch_code'],
+        'address'     => $bank_detail['address'],
+        'princeipal'  => $bank_detail['princeipal'],
+        'phone'       => $bank_detail['phone'],
+        'modify_date' => $bank_detail['modify_date'],
+    );
+}
+file_put_contents('bank_with_branchs_remix_version.json', json_encode($bank_with_branchs_remix_version));
 /**
  ** Methods
  **/

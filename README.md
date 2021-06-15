@@ -23,7 +23,8 @@
 
 
 - `bank_with_branchs_all.json` 來源是金管會，金融機構基本資料查詢不同為財金公司提供整理，所含金融機構僅限參加該公司跨行通匯系統之金融機構。
-- `bank_with_branchs_stripped.json` 來源同上，但用簡單的排除法（銀行代碼不為三碼、無分行）留下的資訊。
+- `bank_with_branchs_stripped.json` 來源同上，但用簡單的排除法（銀行代碼不為三碼、無分行）留下的資訊。這份與前份都不包含農漁會等機構資訊。
+- `bank_with_branchs_fisc_version.json` 中央銀行總分支機構位置版本。包含第一層銀行代碼與第二層分行代碼。
 
 
 ### 更新清單的方法 
