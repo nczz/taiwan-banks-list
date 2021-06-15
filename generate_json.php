@@ -15,18 +15,19 @@ for ($i = 1; $i < count($csv); $i++) {
         $cats[$csv[$i][0]] = array();
     }
     $bank_code           = substr($csv[$i][1], 0, 3);
-    $cats[$csv[$i][0]][] = array('bank_code' => $bank_code, 'name' => $csv[$i][2], 'site' => $csv[$i][3]);
+    $branch_code         = substr($csv[$i][1], 3, strlen($csv[$i][1]) - 3);
+    $cats[$csv[$i][0]][] = array('bank_code' => $bank_code, 'branch_code' => $branch_code, 'name' => $csv[$i][2], 'site' => $csv[$i][3]);
 }
 file_put_contents('banks_sort_by_cats.json', json_encode($cats));
 // 機構名稱與代碼排序
 $banks_sort_by_codes = array();
 foreach ($cats as $cat => $banks) {
     foreach ($banks as $index => $bank) {
-        $long_code             = $bank[0];
-        $bank_name             = $bank[1];
-        $bank_site             = $bank[2];
-        $bank_code             = substr($long_code, 0, 3);
-        $branch_code           = substr($long_code, 3, strlen($long_code) - 3);
+
+        $bank_name             = $bank['name'];
+        $bank_site             = $bank['site'];
+        $bank_code             = $bank['bank_code'];
+        $branch_code           = $bank['branch_code'];
         $banks_sort_by_codes[] = array('name' => $bank_name, 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'site' => $bank_site);
     }
 }
