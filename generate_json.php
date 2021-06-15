@@ -120,9 +120,9 @@ foreach ($banks_flat_remix_version as $key => $bank_detail) {
         $bank_with_branchs_remix_version[$bank_detail['bank_code']]['site'] = $bank_detail['site'];
     }
     if (!isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['name'])) {
-        $bank_with_branchs_remix_version[$bank_detail['bank_code']]['name'] = $bank_detail['name'];
+        $bank_with_branchs_remix_version[$bank_detail['bank_code']]['name'] = current(explode('(', $bank_detail['name']));
     }
-    if (isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'])) {
+    if (!isset($bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'])) {
         $bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'] = array();
     }
     $bank_with_branchs_remix_version[$bank_detail['bank_code']]['branchs'][] = array(
