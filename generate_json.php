@@ -14,7 +14,8 @@ for ($i = 1; $i < count($csv); $i++) {
     if (!isset($csv[$i][0])) {
         $cats[$csv[$i][0]] = array();
     }
-    $cats[$csv[$i][0]][] = array($csv[$i][1], $csv[$i][2], $csv[$i][3]);
+    $bank_code           = substr($csv[$i][1], 0, 3);
+    $cats[$csv[$i][0]][] = array('bank_code' => $bank_code, 'name' => $csv[$i][2], 'site' => $csv[$i][3]);
 }
 file_put_contents('banks_sort_by_cats.json', json_encode($cats));
 // 機構名稱與代碼排序
