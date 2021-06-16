@@ -86,7 +86,27 @@ for ($i = 1; $i < count($csv_branch2); $i++) {
     }
 }
 file_put_contents('bank_with_branchs_fisc_version.json', json_encode($bank_with_branchs_fisc_version));
-
+/**
+ * 手動轉檔的農會資訊，合併更新最後版本
+ * **/
+$farmers = array();
+if (file_exists('農漁會分支機構資料表.csv')) {
+    $csv_farmer = array_map('str_getcsv', file('農漁會分支機構資料表.csv'));
+    foreach ($csv_farmer as $line => $item) {
+        if (!empty($item[1]) && is_numeric($item[1])) {
+            // print_r($item);exit;
+            $bank_code   = substr($item[1], 0, 3);
+            $branch_code = substr($item[1], 3, strlen($item[1]) - 3);
+            if (!isset($farmers[$bank_code])) {
+                $farmers[$bank_code] = array();
+            }
+            if (!isset($farmers[$bank_code]['branchs'])) {
+                $farmers[$bank_code]['branchs'] = array();
+            }
+            $farmers[$bank_code]['branchs'][] = array('name' => $item[4], 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'address' => $item[16], 'princeipal' => $item[21], 'phone' => $item[17], 'modify_date' => $item[9]);
+        }
+    }
+}
 //以 bank_with_branchs_fisc_version.json 這份，來整合 bank_with_branchs_all.json 扁平化第一層銀行代碼與第二層分行資訊的版本，再重組一二層。
 $bank_with_branchs_fisc_version = $bank_with_branchs_fisc_version;
 $banks_flat_remix_version       = array();
@@ -106,6 +126,15 @@ foreach ($bank_with_branchs_fisc_version as $code => $banks_info) {
                 $pre_data['modify_date'] = $bks['modify_date'];
                 $pre_data['phone']       = $bks['phone'];
                 $pre_data['address']     = $bks['address'];
+            }
+        }
+        $get_banks_info_from_farmers = isset($farmers[$code]) ? $farmers[$code] : array();
+        foreach ($get_banks_info_from_farmers['branchs'] as $index3 => $farmer) {
+            if ($pre_data['branch_code'] == $farmer['branch_code']) {
+                $pre_data['princeipal']  = $farmer['princeipal'];
+                $pre_data['modify_date'] = $farmer['modify_date'];
+                $pre_data['phone']       = $farmer['phone'];
+                $pre_data['address']     = $farmer['address'];
             }
         }
         $banks_flat_remix_version[] = $pre_data;
