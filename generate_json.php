@@ -94,7 +94,7 @@ foreach ($bank_with_branchs_fisc_version as $code => $banks_info) {
     foreach ($banks_info['branchs'] as $index => $child_bank) {
         $pre_data                  = array('name' => '', 'bank_code' => '', 'branch_code' => '', 'address' => '', 'princeipal' => '', 'phone' => '', 'princeipal' => '', 'site' => '', 'modify_date' => '');
         $pre_data['bank_code']     = $code;
-        $bank_first_name           = str_replace('（農金資訊所屬會員）', '', $banks_info['name']);
+        $bank_first_name           = str_replace(array('（', '）', '農金資訊所屬會員', '(', ')'), '', $banks_info['name']);
         $pre_data['name']          = $bank_first_name == $child_bank['name'] ? $bank_first_name : $bank_first_name . "({$child_bank['name']})";
         $pre_data['branch_code']   = $child_bank['code'];
         $pre_data['address']       = $child_bank['address'];
