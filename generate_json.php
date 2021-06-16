@@ -96,14 +96,14 @@ if (file_exists('農漁會分支機構資料表.csv')) {
         if (!empty($item[1]) && is_numeric($item[1])) {
             // print_r($item);exit;
             $bank_code   = substr($item[1], 0, 3);
-            $branch_code = substr($item[1], 3, strlen($item[1]) - 3);
+            $branch_code = substr($item[3], 3, strlen($item[3]) - 3);
             if (!isset($farmers[$bank_code])) {
                 $farmers[$bank_code] = array();
             }
             if (!isset($farmers[$bank_code]['branchs'])) {
                 $farmers[$bank_code]['branchs'] = array();
             }
-            $farmers[$bank_code]['branchs'][] = array('name' => $item[4], 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'address' => $item[16], 'princeipal' => $item[21], 'phone' => $item[17], 'modify_date' => $item[9]);
+            $farmers[$bank_code]['branchs'][] = array('name' => $item[4], 'bank_code' => $bank_code, 'branch_code' => $branch_code, 'address' => trim($item[16]), 'princeipal' => trim($item[21]), 'phone' => trim($item[17]), 'modify_date' => trim($item[9]));
         }
     }
 }
