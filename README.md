@@ -41,7 +41,7 @@ php -f generate_json.php
 
 ### 其他參考資料
 
-1. [農漁會分支機構資料表](https://data.coa.gov.tw/Query/ServiceDetail.aspx?id=C03)
+1. [農漁會分支機構資料表](https://data.gov.tw/dataset/61187)
 2. [中華郵政全國營業據點](https://data.gov.tw/dataset/5950)
 
 ### License
