@@ -32,7 +32,14 @@ foreach ($cats as $cat => $banks) {
     }
 }
 usort($banks_sort_by_codes, function ($item1, $item2) {
-    return $item1['bank_code'] <=> $item2['bank_code'];
+    // return $item1['bank_code'] <=> $item2['bank_code'];
+    if ($item1['bank_code'] < $item2['bank_code']) {
+        return -1;
+    } elseif ($item1['bank_code'] > $item2['bank_code']) {
+        return 1;
+    } else {
+        return 0;
+    }
 });
 file_put_contents('banks_sort_by_codes.json', json_encode($banks_sort_by_codes));
 // 解析金融機構基本資料 CSV 檔案
@@ -120,21 +127,25 @@ foreach ($bank_with_branchs_fisc_version as $code => $banks_info) {
         $pre_data['address']       = $child_bank['address'];
         $get_banks_info_from_other = isset($banks[$code]) ? $banks[$code] : array();
         $pre_data['site']          = isset($banks[$code]) ? $banks[$code]['site'] : '';
-        foreach ($get_banks_info_from_other['branchs'] as $index2 => $bks) {
-            if ($pre_data['branch_code'] == $bks['branch']) {
-                $pre_data['princeipal']  = $bks['princeipal'];
-                $pre_data['modify_date'] = $bks['modify_date'];
-                $pre_data['phone']       = $bks['phone'];
-                $pre_data['address']     = $bks['address'];
+        if (isset($get_banks_info_from_other['branchs'])) {
+            foreach ($get_banks_info_from_other['branchs'] as $index2 => $bks) {
+                if ($pre_data['branch_code'] == $bks['branch']) {
+                    $pre_data['princeipal']  = $bks['princeipal'];
+                    $pre_data['modify_date'] = $bks['modify_date'];
+                    $pre_data['phone']       = $bks['phone'];
+                    $pre_data['address']     = $bks['address'];
+                }
             }
         }
         $get_banks_info_from_farmers = isset($farmers[$code]) ? $farmers[$code] : array();
-        foreach ($get_banks_info_from_farmers['branchs'] as $index3 => $farmer) {
-            if ($pre_data['branch_code'] == $farmer['branch_code']) {
-                $pre_data['princeipal']  = $farmer['princeipal'];
-                $pre_data['modify_date'] = $farmer['modify_date'];
-                $pre_data['phone']       = $farmer['phone'];
-                $pre_data['address']     = $farmer['address'];
+        if (isset($get_banks_info_from_farmers['branchs'])) {
+            foreach ($get_banks_info_from_farmers['branchs'] as $index3 => $farmer) {
+                if ($pre_data['branch_code'] == $farmer['branch_code']) {
+                    $pre_data['princeipal']  = $farmer['princeipal'];
+                    $pre_data['modify_date'] = $farmer['modify_date'];
+                    $pre_data['phone']       = $farmer['phone'];
+                    $pre_data['address']     = $farmer['address'];
+                }
             }
         }
         $banks_flat_remix_version[] = $pre_data;
